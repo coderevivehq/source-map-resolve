@@ -1,7 +1,8 @@
 var atob = require("atob")
 var urlLib = require("url")
 var pathLib = require("path")
-var decodeUriComponentLib = require("decode-uri-component")
+var decodeUriComponentModule = require("decode-uri-component")
+var decodeUriComponentLib = decodeUriComponentModule["default"] || decodeUriComponentModule
 
 
 

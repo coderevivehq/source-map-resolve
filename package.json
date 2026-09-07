@@ -1,6 +1,6 @@
 {
-  "name": "source-map-resolve",
-  "version": "0.6.0",
+  "name": "@coderevivehq/source-map-resolve",
+  "version": "0.6.1",
   "author": "Simon Lydell",
   "license": "MIT",
   "description": "Resolve the source map and/or sources for a generated file.",
@@ -17,7 +17,13 @@
     "find",
     "finder"
   ],
-  "repository": "lydell/source-map-resolve",
+  "repository": "coderevivehq/source-map-resolve",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.16"
+  },
   "files": [
     "index.js"
   ],
@@ -28,7 +34,7 @@
   },
   "dependencies": {
     "atob": "^2.1.2",
-    "decode-uri-component": "^0.2.0"
+    "decode-uri-component": "^0.5.0"
   },
   "devDependencies": {
     "jshint": "2.10.3",
