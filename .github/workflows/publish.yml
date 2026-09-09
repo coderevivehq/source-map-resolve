@@ -138,16 +138,12 @@ jobs:
       - name: Publish to npm with provenance
         if: steps.npm-version.outputs.published != 'true'
         shell: bash
-        # NPM_TOKEN is an organization Actions secret granted only to approved repositories.
+        # NPM_TOKEN is used only for bootstrap. Once npm Trusted Publishing is
+        # configured, npm uses this job's GitHub OIDC identity instead.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           package_files=( *.tgz )
-
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "NPM_TOKEN is unavailable. Grant this repository access to the organization secret."
-            exit 1
-          fi
 
           if [ "${#package_files[@]}" -ne 1 ] || [ ! -f "${package_files[0]}" ]; then
             echo "Expected exactly one package archive."
