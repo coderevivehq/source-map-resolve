@@ -1,223 +1,107 @@
-Deprecated
-==========
+<p align="center">
+  <img src="https://raw.githubusercontent.com/coderevivehq/source-map-resolve/main/.github/assets/coderevive-hero.png" alt="source-map-resolve maintained by CodeRevive" width="460">
+</p>
 
-Is npm bugging you about this module being deprecated? You probably depend on it via an old version of `micromatch`:
+<h1 align="center">source-map-resolve</h1>
 
+<p align="center">
+  A maintained continuation of <a href="https://github.com/lydell/source-map-resolve">source-map-resolve</a> by <a href="https://github.com/coderevivehq">CodeRevive</a>.
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@coderevivehq/source-map-resolve"><img alt="npm version" src="https://img.shields.io/npm/v/%40coderevivehq%2Fsource-map-resolve?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/@coderevivehq/source-map-resolve"><img alt="npm downloads" src="https://img.shields.io/npm/dm/%40coderevivehq%2Fsource-map-resolve?style=flat-square"></a>
+  <a href="https://github.com/coderevivehq/source-map-resolve/actions/workflows/ci.yml"><img alt="build status" src="https://github.com/coderevivehq/source-map-resolve/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/coderevivehq/source-map-resolve/releases"><img alt="latest release" src="https://img.shields.io/github/v/release/coderevivehq/source-map-resolve?style=flat-square"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/coderevivehq/source-map-resolve?style=flat-square"></a>
+</p>
+
+## Overview
+
+Resolve the source map and/or sources for a generated file. The module is intended for Node.js tools and browser applications that need to locate a source map from a generated file, resolve the source paths in that map, and optionally load the original source contents.
+
+## Maintained by CodeRevive
+
+This maintained continuation is published by [CodeRevive](https://github.com/coderevivehq). Security patches are our highest priority. We also review bug reports, feature requests, and suggestions from the community.
+
+The project is based on the original [source-map-resolve](https://github.com/lydell/source-map-resolve) repository and its contributors.
+
+## Quick links
+
+- [Overview](#overview)
+- [Maintained by CodeRevive](#maintained-by-coderevive)
+- [Installation & setup](#installation--setup)
+- [Documentation](#documentation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [Security & support](#security--support)
+- [Credits & license](#credits--license)
+
+## Installation & setup
+
+```sh
+npm install @coderevivehq/source-map-resolve
 ```
-some-package > some-other-package > micromatch > nanomatch > snapdragon > source-map-resolve
-```
 
-In the above case, you could try:
+The package supports Node.js 14.16 and later. It can also be used in browser environments with a compatible asynchronous or synchronous `read` function.
 
-- To make `some-other-package` update to the latest version of `micromatch`, which doesn’t depend on `nanomatch` anymore.
-- To make `some-package` not depend on `some-other-package`.
-- Check that you use the latest version of `some-package`. Maybe they have already updated the deprecated stuff away!
-- Maybe your dependency chain is even longer? See if the bad stuff can be cut off at some other point.
+## Documentation
 
-Or maybe some package you use depends on `nanomatch`? If so, try to make that package switch to `micromatch` instead.
+The API documentation is maintained in this README. See [Usage](#usage) for the resolver methods and their result objects, and [Notes](#notes) for source-map header handling.
 
-So why is `source-map-resolve` deprecated? Well, `source-map-resolve` tries to work with source maps completely in general – support every feature and be completely language agnostic. That is a cool goal, but has a couple of flaws:
-
-- Finding source map comments. This is done via regex to support any language, but in reality you need to know the language to know what a comment is, as opposed to something that _looks_ like a comment inside a string. In reality, only JS and CSS use source maps, but even then you have further problems. The source map specification is vague on exactly how to find a source map comment, and browsers differ. So what does it even mean to find _the_ source map comment of a file? You could try to reverse engineer how browsers do it, but what to do when they disagree?
-- URLs. Source maps link to source files via URLs, not file paths. But `source-map-resolve` works with file paths. How should it translate URLs to file paths? `source-map-resolve` makes assumptions and has some issues on Windows.
-- The “general” approach. The source map spec is, well, pretty under specified, so it’s difficult to decide how `source-map-resolve` should work at all.
-
-If you still find this package useful and would like to use it:
-
-- First think through if you _really_ need it. Why are you “resolving source maps” (whatever that even means)? Is there some simpler way to solve your problem? Maybe in your case you don’t have to support _everything_ because your tool only deals with JS and deals with source maps that look a certain way?
-- Copy good parts of the code.
-- Fork it. If you do, please let me know so I can link to your fork. Also note that there is a branch called [next](https://github.com/lydell/source-map-resolve/tree/next) with more modern code, from another contributor (that I shamefully never released).
-
-Overview
-========
-
-Resolve the source map and/or sources for a generated file.
+## Usage
 
 ```js
-var sourceMapResolve = require("source-map-resolve")
-var sourceMap        = require("source-map")
+var sourceMapResolve = require("@coderevivehq/source-map-resolve")
 
-var code = [
-  "!function(){...}();",
-  "/*# sourceMappingURL=foo.js.map */"
-].join("\n")
-
-sourceMapResolve.resolveSourceMap(code, "/js/foo.js", fs.readFile, function(error, result) {
+sourceMapResolve.resolve(code, codeUrl, read, function(error, result) {
   if (error) {
     return notifyFailure(error)
   }
-  result
-  // {
-  //   map: {file: "foo.js", mappings: "...", sources: ["/coffee/foo.coffee"], names: []},
-  //   url: "/js/foo.js.map",
-  //   sourcesRelativeTo: "/js/foo.js.map",
-  //   sourceMappingURL: "foo.js.map"
-  // }
 
-  sourceMapResolve.resolveSources(result.map, result.sourcesRelativeTo, fs.readFile, function(error, result) {
-    if (error) {
-      return notifyFailure(error)
-    }
-    result
-    // {
-    //   sourcesResolved: ["/coffee/foo.coffee"],
-    //   sourcesContent: ["<contents of /coffee/foo.coffee>"]
-    // }
-  })
-})
-
-sourceMapResolve.resolve(code, "/js/foo.js", fs.readFile, function(error, result) {
-  if (error) {
-    return notifyFailure(error)
-  }
-  result
-  // {
-  //   map: {file: "foo.js", mappings: "...", sources: ["/coffee/foo.coffee"], names: []},
-  //   url: "/js/foo.js.map",
-  //   sourcesRelativeTo: "/js/foo.js.map",
-  //   sourceMappingURL: "foo.js.map",
-  //   sourcesResolved: ["/coffee/foo.coffee"],
-  //   sourcesContent: ["<contents of /coffee/foo.coffee>"]
-  // }
-  result.map.sourcesContent = result.sourcesContent
-  var map = new sourceMap.sourceMapConsumer(result.map)
-  map.sourceContentFor("/coffee/foo.coffee")
-  // "<contents of /coffee/foo.coffee>"
+  // result.map contains the parsed source map.
+  // result.sourcesResolved contains fully resolved source URLs.
+  // result.sourcesContent contains the loaded source contents.
 })
 ```
 
+### `sourceMapResolve.resolveSourceMap(code, codeUrl, read, callback)`
 
-Installation
-============
+Finds a `sourceMappingURL` comment in `code` and reads the referenced source map.
 
-`npm install source-map-resolve`
+- `code` is generated code that may contain a source-map comment.
+- `codeUrl` is the URL of the generated file. Relative source-map URLs are resolved against it.
+- `read(url, callback)` reads a URL and calls `callback(error, content)`.
+- `callback(error, result)` receives the parsed map, its URL, the URL used to resolve sources, and the original `sourceMappingURL`.
 
-Usage
-=====
+If `code` contains no source-map comment, the result is `null`.
 
-### `sourceMapResolve.resolveSourceMap(code, codeUrl, read, callback)` ###
+### `sourceMapResolve.resolveSources(map, mapUrl, read, [options], callback)`
 
-- `code` is a string of code that may or may not contain a sourceMappingURL
-  comment. Such a comment is used to resolve the source map.
-- `codeUrl` is the url to the file containing `code`. If the sourceMappingURL
-  is relative, it is resolved against `codeUrl`.
-- `read(url, callback)` is a function that reads `url` and responds using
-  `callback(error, content)`. In Node.js you might want to use `fs.readFile`,
-  while in the browser you might want to use an asynchronus `XMLHttpRequest`.
-- `callback(error, result)` is a function that is invoked with either an error
-  or `null` and the result.
+Resolves every source in a parsed source map and reads its contents. The result contains `sourcesResolved` and `sourcesContent` in the same order as `map.sources`. The optional `sourceRoot` option overrides or ignores the map's `sourceRoot` value.
 
-The result is an object with the following properties:
+### `sourceMapResolve.resolve(code, codeUrl, read, [options], callback)`
 
-- `map`: The source map for `code`, as an object (not a string).
-- `url`: The url to the source map. If the source map came from a data uri,
-  this property is `null`, since then there is no url to it.
-- `sourcesRelativeTo`: The url that the sources of the source map are relative
-  to. Since the sources are relative to the source map, and the url to the
-  source map is provided as the `url` property, this property might seem
-  superfluos. However, remember that the `url` property can be `null` if the
-  source map came from a data uri. If so, the sources are relative to the file
-  containing the data uri—`codeUrl`. This property will be identical to the
-  `url` property or `codeUrl`, whichever is appropriate. This way you can
-  conveniently resolve the sources without having to think about where the
-  source map came from.
-- `sourceMappingURL`: The url of the sourceMappingURL comment in `code`.
+A convenience method that resolves a source map and then its sources. If `code` is `null`, `codeUrl` is treated as the source-map URL and read directly.
 
-If `code` contains no sourceMappingURL, the result is `null`.
+### Synchronous methods and parsing
 
-### `sourceMapResolve.resolveSources(map, mapUrl, read, [options], callback)` ###
+`resolveSourceMapSync`, `resolveSourcesSync`, and `resolveSync` provide synchronous equivalents that return results or throw errors. `parseMapToJSON(string, [data])` strips the optional `)]}'` XSSI prefix before parsing a source map as JSON.
 
-- `map` is a source map, as an object (not a string).
-- `mapUrl` is the url to the file containing `map`. Relative sources in the
-  source map, if any, are resolved against `mapUrl`.
-- `read(url, callback)` is a function that reads `url` and responds using
-  `callback(error, content)`. In Node.js you might want to use `fs.readFile`,
-  while in the browser you might want to use an asynchronus `XMLHttpRequest`.
-- `options` is an optional object with any of the following properties:
-  - `sourceRoot`: Override the `sourceRoot` property of the source map, which
-    might only be relevant when resolving sources in the browser. This lets you
-    bypass it when using the module outside of a browser, if needed. Pass a
-    string to replace the `sourceRoot` property with, or `false` to ignore it.
-    Defaults to `undefined`.
-- `callback(error, result)` is a function that is invoked with either an error
-  or `null` and the result.
+Errors include a `sourceMapData` property containing the partial result available when the error occurred.
 
-The result is an object with the following properties:
+## Notes
 
-- `sourcesResolved`: The same as `map.sources`, except all the sources are
-  fully resolved.
-- `sourcesContent`: An array with the contents of all sources in `map.sources`,
-  in the same order as `map.sources`. If getting the contents of a source fails,
-  an error object is put into the array instead.
+Source maps can also be supplied through a `SourceMap: <url>` response header. This module does not retrieve generated code, so callers that need this behavior must read the header while retrieving the generated file and then call `resolve(null, sourceMapUrl, read, ...)`.
 
-### `sourceMapResolve.resolve(code, codeUrl, read, [options], callback)` ###
+## Contributing
 
-The arguments are identical to `sourceMapResolve.resolveSourceMap`, except that
-you may also provide the same `options` as in `sourceMapResolve.resolveSources`.
+Bug reports, focused improvements, and documentation updates are welcome through [GitHub issues](https://github.com/coderevivehq/source-map-resolve/issues) and [pull requests](https://github.com/coderevivehq/source-map-resolve/pulls). Please run `npm test` before submitting a change.
 
-This is a convenience method that first resolves the source map and then its
-sources. You could also do this by first calling
-`sourceMapResolve.resolveSourceMap` and then `sourceMapResolve.resolveSources`.
+## Security & support
 
-The result is identical to `sourceMapResolve.resolveSourceMap`, with the
-properties from `sourceMapResolve.resolveSources` merged into it.
+Report security concerns privately through the repository's [Security](https://github.com/coderevivehq/source-map-resolve/security) page. For usage questions and ordinary bugs, open a [GitHub issue](https://github.com/coderevivehq/source-map-resolve/issues) with a minimal reproduction when possible.
 
-There is one extra feature available, though. If `code` is `null`, `codeUrl` is
-treated as a url to the source map instead of to `code`, and will be read. This
-is handy if you _sometimes_ get the source map url from the `SourceMap: <url>`
-header (see the [Notes] section). In this case, the `sourceMappingURL` property
-of the result is `null`.
+## Credits & license
 
-
-[Notes]: #notes
-
-### `sourceMapResolve.*Sync()` ###
-
-There are also sync versions of the three previous functions. They are identical
-to the async versions, except:
-
-- They expect a sync reading function. In Node.js you might want to use
-  `fs.readFileSync`, while in the browser you might want to use a synchronus
-  `XMLHttpRequest`.
-- They throw errors and return the result instead of using a callback.
-
-`sourceMapResolve.resolveSourcesSync` also accepts `null` as the `read`
-parameter. The result is the same as when passing a function as the `read
-parameter`, except that the `sourcesContent` property of the result will be an
-empty array. In other words, the sources aren’t read. You only get the
-`sourcesResolved` property. (This only supported in the synchronus version, since
-there is no point doing it asynchronusly.)
-
-### `sourceMapResolve.parseMapToJSON(string, [data])` ###
-
-The spec says that if a source map (as a string) starts with `)]}'`, it should
-be stripped off. This is to prevent XSSI attacks. This function does that and
-returns the result of `JSON.parse`ing what’s left.
-
-If this function throws `error`, `error.sourceMapData === data`.
-
-### Errors
-
-All errors passed to callbacks or thrown by this module have a `sourceMapData`
-property that contain as much as possible of the intended result of the function
-up until the error occurred.
-
-Note that while the `map` property of result objects always is an object,
-`error.sourceMapData.map` will be a string if parsing that string fails.
-
-
-Note
-====
-
-This module resolves the source map for a given generated file by looking for a
-sourceMappingURL comment. The spec defines yet a way to provide the URL to the
-source map: By sending the `SourceMap: <url>` header along with the generated
-file. Since this module doesn’t retrive the generated code for you (instead
-_you_ give the generated code to the module), it’s up to you to look for such a
-header when you retrieve the file (should the need arise).
-
-
-License
-=======
-
-[MIT](LICENSE).
+This project is a maintained continuation of [lydell/source-map-resolve](https://github.com/lydell/source-map-resolve). Original code and CodeRevive-authored changes are licensed under the MIT License. Original copyright notices are retained in [LICENSE](LICENSE).
