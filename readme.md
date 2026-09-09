@@ -18,7 +18,7 @@
 
 ## Overview
 
-Resolve the source map and/or sources for a generated file. The module is intended for Node.js tools and browser applications that need to locate a source map from a generated file, resolve the source paths in that map, and optionally load the original source contents.
+Resolve the source map and/or sources for a generated file. The package targets Node.js tools that need to locate a source map from generated code, resolve the source paths in that map, and optionally load the original source contents.
 
 ## Maintained by CodeRevive
 
@@ -43,11 +43,11 @@ The project is based on the original [source-map-resolve](https://github.com/lyd
 npm install @coderevivehq/source-map-resolve
 ```
 
-The package supports Node.js 14.16 and later. It can also be used in browser environments with a compatible asynchronous or synchronous `read` function.
+The package supports Node.js 14.16 and later.
 
 ## Documentation
 
-The API documentation is maintained in this README. See [Usage](#usage) for the resolver methods and their result objects, and [Notes](#notes) for source-map header handling.
+Detailed documentation is maintained with the source code in the [`docs/`](docs/) directory. Start with the [documentation overview](docs/index.md), then use the [Usage guide](docs/usage.md), [API reference](docs/api.md), [Examples](docs/examples.md), and [Troubleshooting guide](docs/troubleshooting.md).
 
 ## Usage
 
@@ -56,7 +56,7 @@ var sourceMapResolve = require("@coderevivehq/source-map-resolve")
 
 sourceMapResolve.resolve(code, codeUrl, read, function(error, result) {
   if (error) {
-    return notifyFailure(error)
+    throw error
   }
 
   // result.map contains the parsed source map.
@@ -65,34 +65,7 @@ sourceMapResolve.resolve(code, codeUrl, read, function(error, result) {
 })
 ```
 
-### `sourceMapResolve.resolveSourceMap(code, codeUrl, read, callback)`
-
-Finds a `sourceMappingURL` comment in `code` and reads the referenced source map.
-
-- `code` is generated code that may contain a source-map comment.
-- `codeUrl` is the URL of the generated file. Relative source-map URLs are resolved against it.
-- `read(url, callback)` reads a URL and calls `callback(error, content)`.
-- `callback(error, result)` receives the parsed map, its URL, the URL used to resolve sources, and the original `sourceMappingURL`.
-
-If `code` contains no source-map comment, the result is `null`.
-
-### `sourceMapResolve.resolveSources(map, mapUrl, read, [options], callback)`
-
-Resolves every source in a parsed source map and reads its contents. The result contains `sourcesResolved` and `sourcesContent` in the same order as `map.sources`. The optional `sourceRoot` option overrides or ignores the map's `sourceRoot` value.
-
-### `sourceMapResolve.resolve(code, codeUrl, read, [options], callback)`
-
-A convenience method that resolves a source map and then its sources. If `code` is `null`, `codeUrl` is treated as the source-map URL and read directly.
-
-### Synchronous methods and parsing
-
-`resolveSourceMapSync`, `resolveSourcesSync`, and `resolveSync` provide synchronous equivalents that return results or throw errors. `parseMapToJSON(string, [data])` strips the optional `)]}'` XSSI prefix before parsing a source map as JSON.
-
-Errors include a `sourceMapData` property containing the partial result available when the error occurred.
-
-## Notes
-
-Source maps can also be supplied through a `SourceMap: <url>` response header. This module does not retrieve generated code, so callers that need this behavior must read the header while retrieving the generated file and then call `resolve(null, sourceMapUrl, read, ...)`.
+For complete asynchronous and synchronous examples, result shapes, `sourceRoot` handling, data URIs, and error behavior, see the [documentation overview](docs/index.md).
 
 ## Contributing
 
